@@ -2,9 +2,16 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Text, Button, Card, Divider } from 'react-native-paper';
 import MapView, { Marker } from 'react-native-maps';
+import StarRating from '../components/StarRating';
 
 const ParkingLotDetailsScreen = ({ route, navigation }) => {
   const { parkingLot } = route.params;
+
+  const handleBookNow = () => {
+    navigation.navigate('BookingForm', {
+      parkingLot: parkingLot
+    });
+  };
 
   // Mock coordinates - in real app, these would come from the API
   const mockLocation = {
@@ -19,15 +26,31 @@ const ParkingLotDetailsScreen = ({ route, navigation }) => {
           <Text style={styles.title}>{parkingLot.name}</Text>
           <Text style={styles.location}>{parkingLot.location}</Text>
           
+          <View style={styles.ratingContainer}>
+            <StarRating rating={parkingLot.rating || 0} size={24} />
+          </View>
+
           <View style={styles.detailsContainer}>
-            <View style={styles.detailItem}>
+            <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Vacant Spaces</Text>
               <Text style={styles.detailValue}>{parkingLot.vacantSpaces}</Text>
             </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Fee/Hour</Text>
+
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Fee per Hour</Text>
               <Text style={styles.detailValue}>${parkingLot.feePerHour}</Text>
             </View>
+
+            {parkingLot.amenities && (
+              <View style={styles.amenitiesContainer}>
+                <Text style={styles.amenitiesTitle}>Amenities</Text>
+                {parkingLot.amenities.map((amenity, index) => (
+                  <Text key={index} style={styles.amenity}>
+                    • {amenity}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
         </Card.Content>
       </Card>
@@ -69,7 +92,7 @@ const ParkingLotDetailsScreen = ({ route, navigation }) => {
       <View style={styles.buttonContainer}>
         <Button
           mode="contained"
-          onPress={() => navigation.navigate('BookingForm', { parkingLot })}
+          onPress={handleBookNow}
           style={styles.bookButton}
         >
           Book Parking
@@ -83,10 +106,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    padding: 16,
   },
   card: {
-    margin: 16,
-    marginBottom: 8,
+    marginBottom: 16,
     elevation: 4,
   },
   title: {
@@ -99,22 +122,41 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
   },
+  ratingContainer: {
+    marginBottom: 20,
+  },
   detailsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 8,
   },
-  detailItem: {
-    flex: 1,
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
   },
   detailValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#2196F3',
+  },
+  amenitiesContainer: {
+    marginTop: 16,
+  },
+  amenitiesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  amenity: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 4,
   },
   sectionTitle: {
     fontSize: 18,

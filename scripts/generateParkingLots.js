@@ -1,121 +1,78 @@
-const parkingLots = [
-  {
-    name: "Downtown Central Parking",
-    location: "123 Main Street, Downtown",
-    totalSpaces: 200,
-    availableSpaces: 45,
-    feePerHour: 5.00,
-    coordinates: {
-      latitude: 40.7128,
-      longitude: -74.0060
-    },
-    amenities: ["24/7 Security", "CCTV", "Lighting"],
-    rating: 4.5,
-    isOpen: true
-  },
-  {
-    name: "City Mall Parking",
-    location: "456 Shopping Avenue, City Center",
-    totalSpaces: 500,
-    availableSpaces: 120,
-    feePerHour: 3.50,
-    coordinates: {
-      latitude: 40.7142,
-      longitude: -74.0064
-    },
-    amenities: ["Valet Service", "Covered Parking", "Security"],
-    rating: 4.2,
-    isOpen: true
-  },
-  {
-    name: "Airport Express Parking",
-    location: "789 Terminal Road, Airport Zone",
-    totalSpaces: 1000,
-    availableSpaces: 300,
-    feePerHour: 7.00,
-    coordinates: {
-      latitude: 40.7150,
-      longitude: -74.0070
-    },
-    amenities: ["24/7 Shuttle", "Covered Parking", "Security"],
-    rating: 4.7,
-    isOpen: true
-  },
-  {
-    name: "University Campus Parking",
-    location: "101 Campus Drive, University Area",
-    totalSpaces: 300,
-    availableSpaces: 50,
-    feePerHour: 2.50,
-    coordinates: {
-      latitude: 40.7135,
-      longitude: -74.0055
-    },
-    amenities: ["Student Discount", "Security", "Lighting"],
-    rating: 4.0,
-    isOpen: true
-  },
-  {
-    name: "Hospital Visitor Parking",
-    location: "202 Medical Center Drive, Healthcare District",
-    totalSpaces: 400,
-    availableSpaces: 100,
-    feePerHour: 4.00,
-    coordinates: {
-      latitude: 40.7145,
-      longitude: -74.0065
-    },
-    amenities: ["24/7 Access", "Security", "Covered Parking"],
-    rating: 4.3,
-    isOpen: true
-  },
-  {
-    name: "Beachfront Parking",
-    location: "303 Coastal Highway, Beach Area",
-    totalSpaces: 150,
-    availableSpaces: 30,
-    feePerHour: 6.00,
-    coordinates: {
-      latitude: 40.7130,
-      longitude: -74.0050
-    },
-    amenities: ["Beach Access", "Security", "Lighting"],
-    rating: 4.6,
-    isOpen: true
-  },
-  {
-    name: "Stadium Parking",
-    location: "404 Sports Avenue, Stadium District",
-    totalSpaces: 2000,
-    availableSpaces: 800,
-    feePerHour: 8.00,
-    coordinates: {
-      latitude: 40.7148,
-      longitude: -74.0068
-    },
-    amenities: ["Event Parking", "Security", "Lighting"],
-    rating: 4.4,
-    isOpen: true
-  },
-  {
-    name: "Business District Parking",
-    location: "505 Corporate Plaza, Business Center",
-    totalSpaces: 600,
-    availableSpaces: 150,
-    feePerHour: 6.50,
-    coordinates: {
-      latitude: 40.7138,
-      longitude: -74.0062
-    },
-    amenities: ["Business Hours", "Security", "Covered Parking"],
-    rating: 4.5,
-    isOpen: true
-  }
-];
+const { faker } = require('@faker-js/faker');
+
+// Helper function to generate random number between min and max
+const getRandomNumber = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// Helper function to generate random fee between min and max with 2 decimal places
+const getRandomFee = (min, max) => {
+  return Number((Math.random() * (max - min) + min).toFixed(2));
+};
+
+const generateParkingLots = () => {
+  const locations = [
+    { name: "Downtown Central Parking", area: "Downtown" },
+    { name: "City Mall Parking", area: "City Center" },
+    { name: "Airport Express Parking", area: "Airport Zone" },
+    { name: "University Campus Parking", area: "University Area" },
+    { name: "Hospital Visitor Parking", area: "Healthcare District" },
+    { name: "Beachfront Parking", area: "Beach Area" },
+    { name: "Stadium Parking", area: "Stadium District" },
+    { name: "Business District Parking", area: "Business Center" },
+    { name: "Shopping Center Parking", area: "Retail District" },
+    { name: "Office Complex Parking", area: "Business Park" },
+    { name: "Train Station Parking", area: "Transport Hub" },
+    { name: "Library Parking", area: "Cultural District" },
+    { name: "Park & Ride", area: "Suburban Hub" },
+    { name: "Market Square Parking", area: "Market District" },
+    { name: "Sports Complex Parking", area: "Sports Zone" },
+    { name: "Community Center Parking", area: "Residential Area" },
+    { name: "Museum Parking", area: "Arts District" },
+    { name: "Convention Center Parking", area: "Event Zone" },
+    { name: "Restaurant Row Parking", area: "Dining District" },
+    { name: "Entertainment District Parking", area: "Nightlife Zone" }
+  ];
+
+  return locations.map((loc, index) => {
+    const totalSpaces = getRandomNumber(100, 2000);
+    const availableSpaces = getRandomNumber(10, 150);
+    // Generate fees between 1.50 and 5.00 with small increments
+    const feePerHour = getRandomFee(1.50, 5.00);
+
+    return {
+      id: (index + 1).toString(),
+      name: loc.name,
+      location: `${getRandomNumber(100, 999)} ${faker.location.street()} ${loc.area}`,
+      totalSpaces,
+      vacantSpaces: availableSpaces,
+      feePerHour,
+      coordinates: {
+        latitude: 40.7128 + (Math.random() * 0.01),
+        longitude: -74.0060 + (Math.random() * 0.01)
+      },
+      amenities: faker.helpers.arrayElements([
+        "24/7 Security",
+        "CCTV",
+        "Lighting",
+        "Valet Service",
+        "Covered Parking",
+        "24/7 Shuttle",
+        "Student Discount",
+        "Beach Access",
+        "Event Parking",
+        "Business Hours"
+      ], getRandomNumber(2, 4)),
+      rating: Number((Math.random() * 2 + 3).toFixed(1)),
+      isOpen: true
+    };
+  });
+};
 
 // Function to create parking lots in MockAPI
 async function createParkingLots() {
   const BASE_URL = 'https://68333d9b464b499636fecb2e.mockapi.io/api/v1';
+  const parkingLots = generateParkingLots();
   
   for (const parkingLot of parkingLots) {
     try {
@@ -133,7 +90,7 @@ async function createParkingLots() {
       }
       
       const data = await response.json();
-      console.log(`Created parking lot: ${data.name}`);
+      console.log(`Created parking lot: ${data.name} with fee $${data.feePerHour}/hour`);
     } catch (error) {
       console.error(`Error creating parking lot ${parkingLot.name}:`, error);
     }

@@ -1,62 +1,66 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ImageBackground, ScrollView } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const { register, loading } = useAuth();
+  const [errors, setErrors] = useState({});
+  const { register } = useAuth();
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const validatePassword = (password) => {
-    return password.length >= 6;
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\+?[\d\s-]{10,}$/.test(phone)) {
+      newErrors.phone = 'Phone number is invalid';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
-    try {
-      setError('');
-
-      // Validation
-      if (!name || !email || !password || !confirmPassword) {
-        setError('Please fill in all fields');
-        return;
+    if (validateForm()) {
+      try {
+        await register({
+          name,
+          email,
+          phone,
+          password,
+          memberSince: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          totalParkings: 0,
+          favoriteSpots: 0
+        });
+        navigation.navigate('Login');
+      } catch (error) {
+        setErrors({ submit: error.message });
       }
-
-      if (!validateEmail(email)) {
-        setError('Please enter a valid email address');
-        return;
-      }
-
-      if (!validatePassword(password)) {
-        setError('Password must be at least 6 characters long');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-
-      const success = await register({
-        name,
-        email,
-        password,
-        createdAt: new Date().toISOString(),
-      });
-
-      if (success) {
-        navigation.replace('Login');
-      }
-    } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -74,59 +78,74 @@ const RegisterScreen = ({ navigation }) => {
             <TextInput
               label="Full Name"
               value={name}
-              onChangeText={(text) => {
-                setName(text);
-                setError('');
-              }}
+              onChangeText={setName}
               style={styles.input}
-              mode="outlined"
+              error={!!errors.name}
             />
+            <HelperText type="error" visible={!!errors.name}>
+              {errors.name}
+            </HelperText>
 
             <TextInput
               label="Email"
               value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                setError('');
-              }}
-              style={styles.input}
-              mode="outlined"
+              onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              style={styles.input}
+              error={!!errors.email}
             />
+            <HelperText type="error" visible={!!errors.email}>
+              {errors.email}
+            </HelperText>
+
+            <TextInput
+              label="Phone Number"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              style={styles.input}
+              error={!!errors.phone}
+              placeholder="+1 234 567 8900"
+            />
+            <HelperText type="error" visible={!!errors.phone}>
+              {errors.phone}
+            </HelperText>
 
             <TextInput
               label="Password"
               value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                setError('');
-              }}
-              style={styles.input}
-              mode="outlined"
+              onChangeText={setPassword}
               secureTextEntry
+              style={styles.input}
+              error={!!errors.password}
             />
+            <HelperText type="error" visible={!!errors.password}>
+              {errors.password}
+            </HelperText>
 
             <TextInput
               label="Confirm Password"
               value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                setError('');
-              }}
-              style={styles.input}
-              mode="outlined"
+              onChangeText={setConfirmPassword}
               secureTextEntry
+              style={styles.input}
+              error={!!errors.confirmPassword}
             />
+            <HelperText type="error" visible={!!errors.confirmPassword}>
+              {errors.confirmPassword}
+            </HelperText>
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            {errors.submit && (
+              <HelperText type="error" visible={true}>
+                {errors.submit}
+              </HelperText>
+            )}
 
             <Button
               mode="contained"
               onPress={handleRegister}
               style={styles.button}
-              loading={loading}
-              disabled={loading}
             >
               Register
             </Button>

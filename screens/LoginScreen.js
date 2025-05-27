@@ -1,25 +1,53 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ImageBackground } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
+import { TextInput, Button, Text, HelperText, useTheme } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
 const LoginScreen = ({ navigation }) => {
+  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, loading } = useAuth();
+  const [errors, setErrors] = useState({});
+  const { login, loading, error: authError } = useAuth();
+
+  // Clear errors when inputs change
+  useEffect(() => {
+    if (errors.submit) {
+      setErrors(prev => ({ ...prev, submit: null }));
+    }
+  }, [email, password]);
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    if (!validateForm()) {
       return;
     }
 
-    const success = await login(email, password);
-    if (success) {
-      navigation.replace('Dashboard');
-    } else {
-      setError('Invalid credentials');
+    try {
+      await login(email, password);
+      // If we get here, login was successful
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainApp' }],
+      });
+    } catch (error) {
+      setErrors({ submit: error.message || 'An error occurred during login' });
     }
   };
 
@@ -28,10 +56,13 @@ const LoginScreen = ({ navigation }) => {
       source={require('../assets/parking-bg.jpg')}
       style={styles.background}
     >
-      <View style={styles.container}>
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>Welcome Back</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.placeholder }]}>Sign in to continue</Text>
 
           <TextInput
             label="Email"
@@ -41,7 +72,13 @@ const LoginScreen = ({ navigation }) => {
             mode="outlined"
             keyboardType="email-address"
             autoCapitalize="none"
+            error={!!errors.email}
+            theme={theme}
+            disabled={loading}
           />
+          <HelperText type="error" visible={!!errors.email}>
+            {errors.email}
+          </HelperText>
 
           <TextInput
             label="Password"
@@ -50,9 +87,19 @@ const LoginScreen = ({ navigation }) => {
             style={styles.input}
             mode="outlined"
             secureTextEntry
+            error={!!errors.password}
+            theme={theme}
+            disabled={loading}
           />
+          <HelperText type="error" visible={!!errors.password}>
+            {errors.password}
+          </HelperText>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {errors.submit && (
+            <HelperText type="error" visible={true} style={styles.submitError}>
+              {errors.submit}
+            </HelperText>
+          )}
 
           <Button
             mode="contained"
@@ -60,19 +107,22 @@ const LoginScreen = ({ navigation }) => {
             style={styles.button}
             loading={loading}
             disabled={loading}
+            theme={theme}
           >
-            Login
+            {loading ? 'Logging in...' : 'Login'}
           </Button>
 
           <Button
             mode="text"
             onPress={() => navigation.navigate('Register')}
             style={styles.linkButton}
+            theme={theme}
+            disabled={loading}
           >
             Don't have an account? Register
           </Button>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
@@ -85,12 +135,10 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     padding: 20,
   },
   formContainer: {
-    backgroundColor: 'white',
     padding: 20,
     borderRadius: 10,
     elevation: 5,
@@ -103,12 +151,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
   input: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
   button: {
     marginTop: 10,
@@ -117,8 +164,7 @@ const styles = StyleSheet.create({
   linkButton: {
     marginTop: 15,
   },
-  error: {
-    color: 'red',
+  submitError: {
     textAlign: 'center',
     marginBottom: 10,
   },
